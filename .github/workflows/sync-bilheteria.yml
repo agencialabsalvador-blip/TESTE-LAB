@@ -1,0 +1,20 @@
+name: Sync Bilheteria Digital
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # a cada 15 minutos
+  workflow_dispatch: {} # botão manual "Run workflow" na aba Actions
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node scripts/sync-bilheteria.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          BD_SEED_TOKEN: ${{ secrets.BD_SEED_TOKEN }}
