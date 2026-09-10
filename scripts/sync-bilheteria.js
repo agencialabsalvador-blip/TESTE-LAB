@@ -74,7 +74,7 @@ async function fetchAllTickets(idEvent, token) {
   let totalPages = 1;
   const tickets = [];
   do {
-    const url = `${BD_BASE}/tickets?id_event=${idEvent}&page=${page}&limit=100`;
+    const url = `${BD_BASE}/tickets?id_event=${idEvent}&page=${page}&limit=100&return_cancelled_tickets=true&return_blocked_users=true`;
     const res = await fetch(url, { headers: { Authorization: token } });
     const rawText = await res.text();
     console.log(`  [debug] página ${page}: HTTP ${res.status}, resposta: ${rawText.slice(0, 500)}`);
