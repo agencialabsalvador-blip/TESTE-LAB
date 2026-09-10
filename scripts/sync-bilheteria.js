@@ -91,6 +91,14 @@ async function fetchAllTickets(idEvent, token) {
     }
     const body = json?.body;
     if (!body) break;
+
+    // DEBUG: mostra TODOS os campos do primeiro ticket da primeira página,
+    // pra descobrirmos o nome exato do campo de valor/preço.
+    if (page === 1 && body.tickets && body.tickets[0]) {
+      console.log("[DEBUG CAMPOS] Primeiro ticket completo:", JSON.stringify(body.tickets[0], null, 2));
+      console.log("[DEBUG CAMPOS] Todas as chaves do ticket:", Object.keys(body.tickets[0]).join(", "));
+    }
+
     tickets.push(...(body.tickets || []));
     totalPages = body.total_pages || 1;
     page++;
@@ -107,7 +115,9 @@ function aggregate(tickets) {
     porDia: {},
   };
   for (const t of tickets) {
-    const valor = parseFloat(String(t.value || "0").replace(",", ".")) || 0;
+    // tenta vários nomes possíveis pro campo de valor
+    const rawValor = t.value ?? t.price ?? t.amount ?? t.valor ?? t.ticket_value ?? t.total_value ?? "0";
+    const valor = parseFloat(String(rawValor).replace(",", ".")) || 0;
     out.valorTotal += valor;
 
     const setor = t.sector_name || "—";
@@ -120,7 +130,9 @@ function aggregate(tickets) {
     out.porTipo[tipo].qtd++;
     out.porTipo[tipo].valor += valor;
 
-    const dia = (t.order_datetime || "").slice(0, 10);
+    // tenta vários nomes possíveis pro campo de data
+    const rawData = t.order_datetime || t.validation_datetime || t.event_start_datetime || "";
+    const dia = String(rawData).slice(0, 10);
     if (dia) {
       out.porDia[dia] = out.porDia[dia] || { qtd: 0, valor: 0 };
       out.porDia[dia].qtd++;
