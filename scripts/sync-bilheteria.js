@@ -76,11 +76,19 @@ async function fetchAllTickets(idEvent, token) {
   do {
     const url = `${BD_BASE}/tickets?id_event=${idEvent}&page=${page}&limit=100`;
     const res = await fetch(url, { headers: { Authorization: token } });
+    const rawText = await res.text();
+    console.log(`  [debug] página ${page}: HTTP ${res.status}, resposta: ${rawText.slice(0, 500)}`);
     if (!res.ok) {
       console.warn(`Evento ${idEvent}: erro HTTP ${res.status} na página ${page}`);
       break;
     }
-    const json = await res.json();
+    let json;
+    try {
+      json = JSON.parse(rawText);
+    } catch {
+      console.warn(`Evento ${idEvent}: resposta não é JSON válido`);
+      break;
+    }
     const body = json?.body;
     if (!body) break;
     tickets.push(...(body.tickets || []));
