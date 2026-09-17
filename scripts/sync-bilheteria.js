@@ -98,10 +98,10 @@ async function fetchAllTickets(idEvent, token) {
   return tickets;
 }
 
-// Considera venda válida tudo que NÃO estiver claramente cancelado/estornado/etc.
+// Considera venda válida tudo que NÃO estiver claramente cancelado/estornado/devolvido/etc.
 // Tickets sem order_status preenchido (ex.: PDV físico) contam como válidos.
 const INVALID_STATUSES = [
-  "cancelado", "estornado", "reembolsado",
+  "cancelado", "estornado", "reembolsado", "devolvido",
   "recusado", "negado", "rejeitado"
 ];
 
