@@ -98,11 +98,29 @@ async function fetchAllTickets(idEvent, token) {
   return tickets;
 }
 
-// Só considera ingressos com pedido efetivamente aprovado — exclui pendentes,
-// cancelados, estornados etc., pra bater com o número "Vendas" do painel da BD.
+// Considera venda válida tudo que NÃO estiver claramente cancelado/estornado/etc.
+// Tickets sem order_status preenchido (ex.: PDV físico) contam como válidos.
+const INVALID_STATUSES = [
+  "cancelado", "estornado", "reembolsado",
+  "recusado", "negado", "rejeitado"
+];
+
 function isValidSale(t) {
   const status = String(t.order_status || "").trim().toLowerCase();
-  return status === "aprovado";
+  return !INVALID_STATUSES.includes(status);
+}
+
+// Loga a contagem de cada order_status bruto encontrado no evento,
+// pra sabermos exatamente o que está sendo excluído e por quê.
+function logStatusBreakdown(tickets) {
+  const counts = {};
+  for (const t of tickets) {
+    const raw = t.order_status === undefined || t.order_status === null || t.order_status === ""
+      ? "(vazio)"
+      : t.order_status;
+    counts[raw] = (counts[raw] || 0) + 1;
+  }
+  console.log("  [debug] contagem por order_status:", JSON.stringify(counts));
 }
 
 function aggregate(tickets) {
@@ -173,6 +191,7 @@ async function main() {
     const idEvent = evento.id_event;
     console.log(`Buscando tickets do evento ${idEvent} (${evento.nome || "sem nome"})...`);
     const tickets = await fetchAllTickets(idEvent, newToken);
+    logStatusBreakdown(tickets);
     const agg = aggregate(tickets);
     agg.atualizadoEm = new Date().toISOString();
     config.resultados[idEvent] = agg;
